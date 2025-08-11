@@ -503,10 +503,17 @@ function showNeighborhood(cityKey, neighborhoodKey) {
       toggleStar(poi);
     });
     li.appendChild(star);
-    // Add some space between star and name
-    const nameSpan = document.createElement('span');
-    nameSpan.textContent = ' ' + poi;
-    li.appendChild(nameSpan);
+    // Add a space between the star and the POI name
+    li.appendChild(document.createTextNode(' '));
+    // Create a link to Google Maps for this POI. Include the city name in
+    // the query to improve accuracy.
+    const link = document.createElement('a');
+    link.className = 'poi-link';
+    link.textContent = poi;
+    link.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(poi + ' ' + city.name)}`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    li.appendChild(link);
     poisList.appendChild(li);
   });
   card.appendChild(poisList);
@@ -691,13 +698,20 @@ function showFavorites(cityKey) {
         star.addEventListener('click', (e) => {
           e.stopPropagation();
           toggleStar(poi);
-          // If we unstar a POI, remove it from the list and re-render favourites view
+          // Re-render favourites to reflect removal/addition
           showFavorites(cityKey);
         });
         li.appendChild(star);
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = ' ' + poi;
-        li.appendChild(nameSpan);
+        // Add a space before the link
+        li.appendChild(document.createTextNode(' '));
+        // Create a link to Google Maps for this POI using the city name for context
+        const link = document.createElement('a');
+        link.className = 'poi-link';
+        link.textContent = poi;
+        link.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(poi + ' ' + city.name)}`;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        li.appendChild(link);
         list.appendChild(li);
       });
       card.appendChild(list);
