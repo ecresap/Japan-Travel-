@@ -386,6 +386,13 @@ function showCity(cityKey) {
       mapBtn.addEventListener('click', () => showMap(cityKey));
       list.appendChild(mapBtn);
     }
+    // Insert a "Favorites" button immediately after the map button (if present).
+    const favoritesBtn = document.createElement('button');
+    favoritesBtn.className = 'button favorites-button';
+    favoritesBtn.textContent = 'Favorites';
+    favoritesBtn.addEventListener('click', () => showFavorites(cityKey));
+    // Append favourites right after map button (or at start if no map button)
+    list.appendChild(favoritesBtn);
     // Create a button for each neighborhood
     Object.keys(city.neighborhoods).forEach((nKey) => {
       const nb = city.neighborhoods[nKey];
@@ -395,12 +402,6 @@ function showCity(cityKey) {
       btn.addEventListener('click', () => showNeighborhood(cityKey, nKey));
       list.appendChild(btn);
     });
-    // Insert a "Favorites" button at the end of the list so it appears after neighborhoods.
-    const favoritesBtn = document.createElement('button');
-    favoritesBtn.className = 'button favorites-button';
-    favoritesBtn.textContent = 'Favorites';
-    favoritesBtn.addEventListener('click', () => showFavorites(cityKey));
-    list.appendChild(favoritesBtn);
     contentEl.appendChild(list);
   }
   contentEl.focus();
