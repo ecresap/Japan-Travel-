@@ -290,8 +290,18 @@ function showHome() {
   // Create a list of city buttons
   const wrapper = document.createElement('div');
   wrapper.className = 'button-list';
-  Object.keys(travelData).forEach((cityKey) => {
+  // Define the order of cities on the home screen. We display Tokyo first,
+  // then Osaka, then Kyoto. If additional cities are added later, append
+  // them after the defined order.
+  const orderedKeys = ['tokyo', 'osaka', 'kyoto'];
+  const allKeys = Object.keys(travelData);
+  // Start with our specified order, then add any keys not listed
+  const displayKeys = orderedKeys.concat(
+    allKeys.filter((key) => !orderedKeys.includes(key))
+  );
+  displayKeys.forEach((cityKey) => {
     const city = travelData[cityKey];
+    if (!city) return;
     const btn = document.createElement('button');
     btn.className = 'button';
     // Compose HTML to include city name and dates
