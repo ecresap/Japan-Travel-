@@ -111,7 +111,9 @@ main {
 }
 
 /* Ensure the map button takes the full row in a button list */
-.button-list .map-button {
+/* Ensure the map button and favourites button take the full row in a button list */
+.button-list .map-button,
+.button-list .favorites-button {
   flex-basis: 100%;
 }
 
@@ -177,7 +179,9 @@ main {
 
 .card ul {
   margin: 0.5rem 0;
-  padding-left: 1.2rem;
+  /* Remove default bullets; custom stars provide visual markers */
+  list-style: none;
+  padding-left: 0;
 }
 
 .card li {
@@ -212,6 +216,28 @@ body.map-view main {
   width: 100%;
 }
 
+/* Station links styling */
+.station-link {
+  color: #1565c0;
+  text-decoration: underline;
+}
+
+.station-link:hover {
+  color: #0d47a1;
+  text-decoration: underline;
+}
+
+/* Star icons next to POIs */
+.star-icon {
+  cursor: pointer;
+  color: #c62828;
+  margin-right: 0.3rem;
+}
+
+.star-icon:hover {
+  color: #d32f2f;
+}
+
 /* Map view styles */
 .map-container {
   position: relative;
@@ -237,7 +263,9 @@ body.map-view main {
   align-items: center;
   /* Anchor the bottom of the marker at the specified coordinates */
   transform: translate(-50%, -100%);
-  pointer-events: none;
+  /* Enable pointer events for interactivity on map pins */
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .pin .dot {

@@ -205,6 +205,58 @@ const travelData = {
   }
 };
 
+/*
+ * Starred POI management
+ *
+ * We allow users to mark points of interest (POIs) as favourites. The starred
+ * state is saved to localStorage so it persists across sessions. Star icons
+ * appear next to each POI in the neighborhood detail view. Clicking the star
+ * toggles its state, and all instances of the same POI are updated.
+ */
+// Load starred POIs from localStorage. Keys are POI names, values are true.
+let starredPOIs = {};
+try {
+  const storedStars = localStorage.getItem('starredPOIs');
+  if (storedStars) {
+    starredPOIs = JSON.parse(storedStars) || {};
+  }
+} catch (err) {
+  // If localStorage isn’t available (e.g. certain browsers or privacy settings),
+  // fall back to an empty object.
+  starredPOIs = {};
+}
+
+/**
+ * Persist the current starred POIs to localStorage.
+ */
+function saveStarred() {
+  try {
+    localStorage.setItem('starredPOIs', JSON.stringify(starredPOIs));
+  } catch (err) {
+    // Ignore storage errors (e.g. Safari private mode)
+  }
+}
+
+/**
+ * Toggle the starred state of a POI. Updates all star icons with the same
+ * data attribute across the page.
+ *
+ * @param {string} poiName The name of the POI to toggle.
+ */
+function toggleStar(poiName) {
+  if (starredPOIs[poiName]) {
+    delete starredPOIs[poiName];
+  } else {
+    starredPOIs[poiName] = true;
+  }
+  saveStarred();
+  // Update all star elements in the document with matching data-poi
+  const selector = `[data-poi="${CSS.escape(poiName)}"]`;
+  document.querySelectorAll(selector).forEach((starEl) => {
+    starEl.textContent = starredPOIs[poiName] ? '★' : '☆';
+  });
+}
+
 // Access DOM elements
 const contentEl = document.getElementById('content');
 const breadcrumbsEl = document.getElementById('breadcrumbs');
@@ -333,6 +385,12 @@ function showCity(cityKey) {
       btn.addEventListener('click', () => showNeighborhood(cityKey, nKey));
       list.appendChild(btn);
     });
+    // Insert a "Favorites" button at the end of the list so it appears after neighborhoods.
+    const favoritesBtn = document.createElement('button');
+    favoritesBtn.className = 'button favorites-button';
+    favoritesBtn.textContent = 'Favorites';
+    favoritesBtn.addEventListener('click', () => showFavorites(cityKey));
+    list.appendChild(favoritesBtn);
     contentEl.appendChild(list);
   }
   contentEl.focus();
@@ -398,10 +456,24 @@ function showNeighborhood(cityKey, neighborhoodKey) {
   const title = document.createElement('h2');
   title.textContent = neighborhood.name;
   card.appendChild(title);
-  // Station info
-  const stationP = document.createElement('p');
-  stationP.innerHTML = `<strong>Nearest station:</strong> ${neighborhood.station}`;
-  card.appendChild(stationP);
+  // Station info with clickable links to Google Maps
+  const stationContainer = document.createElement('p');
+  stationContainer.innerHTML = '<strong>Nearest station:</strong> ';
+  // Split station string by slashes (" / ") to handle multiple stations
+  const stationParts = neighborhood.station.split(/\s*\/\s*/);
+  stationParts.forEach((part, index) => {
+    const link = document.createElement('a');
+    link.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(part)}`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = part;
+    link.className = 'station-link';
+    stationContainer.appendChild(link);
+    if (index < stationParts.length - 1) {
+      stationContainer.appendChild(document.createTextNode(' / '));
+    }
+  });
+  card.appendChild(stationContainer);
   // POIs list
   const poisTitle = document.createElement('p');
   poisTitle.innerHTML = '<strong>Points of interest:</strong>';
@@ -409,7 +481,21 @@ function showNeighborhood(cityKey, neighborhoodKey) {
   const poisList = document.createElement('ul');
   neighborhood.pois.forEach((poi) => {
     const li = document.createElement('li');
-    li.textContent = poi;
+    // Create a star icon for the POI
+    const star = document.createElement('span');
+    star.className = 'star-icon';
+    star.dataset.poi = poi;
+    star.textContent = starredPOIs[poi] ? '★' : '☆';
+    star.title = 'Click to star/unstar';
+    star.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleStar(poi);
+    });
+    li.appendChild(star);
+    // Add some space between star and name
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = ' ' + poi;
+    li.appendChild(nameSpan);
     poisList.appendChild(li);
   });
   card.appendChild(poisList);
@@ -498,12 +584,118 @@ function showMap(cityKey) {
     lbl.className = 'label';
     lbl.textContent = label;
     pin.appendChild(lbl);
-    mapContainer.appendChild(pin);
+      // Make the pin clickable to jump to the neighborhood details
+      pin.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showNeighborhood(cityKey, label);
+      });
+      mapContainer.appendChild(pin);
   });
   contentEl.appendChild(mapContainer);
   contentEl.focus();
   // Add map-view class so CSS can adjust panel styling for maps
   document.body.classList.add('map-view');
+}
+
+/**
+ * Render a view showing all starred points of interest for a given city.
+ * Favourites are grouped by neighbourhood. If no favourites exist in the
+ * selected city, display a friendly message.
+ *
+ * @param {string} cityKey
+ */
+function showFavorites(cityKey) {
+  const city = travelData[cityKey];
+  if (!city) return;
+  // Compute starred POIs grouped by neighbourhood
+  const groups = {};
+  Object.keys(city.neighborhoods).forEach((nKey) => {
+    const nb = city.neighborhoods[nKey];
+    const starredInNb = nb.pois.filter((poi) => starredPOIs[poi]);
+    if (starredInNb.length > 0) {
+      groups[nKey] = starredInNb;
+    }
+  });
+  // Update breadcrumbs: Home / City / Favorites
+  breadcrumbsEl.innerHTML = '';
+  const homeLink = document.createElement('a');
+  homeLink.href = '#';
+  homeLink.textContent = 'Home';
+  homeLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    showHome();
+  });
+  breadcrumbsEl.appendChild(homeLink);
+  const sep1 = document.createTextNode(' / ');
+  breadcrumbsEl.appendChild(sep1);
+  const cityLink = document.createElement('a');
+  cityLink.href = '#';
+  cityLink.textContent = city.name;
+  cityLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    showCity(cityKey);
+  });
+  breadcrumbsEl.appendChild(cityLink);
+  const sep2 = document.createTextNode(' / ');
+  breadcrumbsEl.appendChild(sep2);
+  const favSpan = document.createElement('span');
+  favSpan.textContent = 'Favorites';
+  breadcrumbsEl.appendChild(favSpan);
+  // Clear main content
+  contentEl.innerHTML = '';
+  // Back link to city menu
+  const back = document.createElement('a');
+  back.href = '#';
+  back.className = 'back-link';
+  back.innerHTML = '← Back to ' + city.name;
+  back.addEventListener('click', (e) => {
+    e.preventDefault();
+    showCity(cityKey);
+  });
+  contentEl.appendChild(back);
+  // If there are no favourites in this city, show a message
+  const groupKeys = Object.keys(groups);
+  if (groupKeys.length === 0) {
+    const msg = document.createElement('p');
+    msg.textContent = 'You have not starred any points of interest in ' + city.name + ' yet.';
+    contentEl.appendChild(msg);
+  } else {
+    groupKeys.forEach((nKey) => {
+      const nbName = city.neighborhoods[nKey].name;
+      const pois = groups[nKey];
+      const card = document.createElement('div');
+      card.className = 'card';
+      const title = document.createElement('h3');
+      title.textContent = nbName;
+      card.appendChild(title);
+      const list = document.createElement('ul');
+      pois.forEach((poi) => {
+        const li = document.createElement('li');
+        // Star icon for toggling within favourites view as well
+        const star = document.createElement('span');
+        star.className = 'star-icon';
+        star.dataset.poi = poi;
+        star.textContent = starredPOIs[poi] ? '★' : '☆';
+        star.title = 'Click to star/unstar';
+        star.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleStar(poi);
+          // If we unstar a POI, remove it from the list and re-render favourites view
+          showFavorites(cityKey);
+        });
+        li.appendChild(star);
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = ' ' + poi;
+        li.appendChild(nameSpan);
+        list.appendChild(li);
+      });
+      card.appendChild(list);
+      contentEl.appendChild(card);
+    });
+  }
+  contentEl.focus();
+  // Ensure map-view class is removed for this view
+  document.body.classList.remove('map-view');
 }
 
 // Initialize application on page load
