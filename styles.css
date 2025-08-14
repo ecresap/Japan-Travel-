@@ -1,5 +1,336 @@
-body { font-family: sans-serif; margin: 0; padding: 0; }
-header { background: #f5f5f5; padding: 1rem; }
-h1 { margin: 0; }
-.button { display: block; margin: 0.5rem 0; padding: 0.75rem; font-size: 1rem; font-weight: bold; text-align: center; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; }
-.poi-link { color: blue; text-decoration: underline; }
+/* Base styling */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  /* Use calligraphy‑style Japanese fonts for a traditional feel */
+  font-family: 'Zen Old Mincho', 'Hina Mincho', 'Noto Serif JP', serif;
+  color: #2c2c2c;
+  /* Base overlay colour to give photographs a painted Nihonga feel */
+  background-color: rgba(253, 248, 227, 0.65);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  /* Allow full‑screen photographic backgrounds */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* Use normal blend mode so photographs remain visible beneath the overlay */
+  background-blend-mode: normal;
+}
+
+/* City‑specific background classes. Each uses a beige overlay via the body base colour to create a unified Nihonga look. */
+body.home-bg {
+  /* Use Nihonga‑style map of Japan for home screen */
+  background-image: url('assets/nihonga_japan_bg.png');
+}
+
+body.kyoto-bg {
+  /* Kyoto background: Nihonga‑style painting of Fushimi Inari torii gates */
+  background-image: url('assets/nihonga_kyoto_bg.png');
+}
+
+body.osaka-bg {
+  /* Osaka background: Nihonga‑style painting of Osaka Castle */
+  background-image: url('assets/nihonga_osaka_bg.png');
+}
+
+body.tokyo-bg {
+  /* Tokyo background: Nihonga‑style painting of Tokyo Tower at dusk */
+  background-image: url('assets/nihonga_tokyo_bg.png');
+}
+
+header {
+  position: relative;
+}
+
+/* Hero section with Japanese patterned background */
+.hero {
+  /* Use a semi-transparent overlay to enhance legibility over body backgrounds */
+  /* Slightly translucent dark panel helps text stand out over busy backgrounds */
+  background-color: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.hero .subtitle {
+  margin-top: 0.5rem;
+  font-size: 1.2rem;
+  opacity: 0.9;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Breadcrumbs */
+#breadcrumbs {
+  margin: 1rem;
+  /* Increase breadcrumb font size for better visibility and make it bold */
+  font-size: 1.8rem;
+  font-weight: 700;
+  /* Light colour and subtle shadow to stand out over photographic backgrounds */
+  color: #f5f5f5;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+#breadcrumbs a {
+  color: #f5f5f5;
+  text-decoration: none;
+  margin-right: 0.5rem;
+}
+
+#breadcrumbs a:hover {
+  text-decoration: underline;
+  color: #ffebee;
+}
+
+main {
+  flex: 1;
+  padding: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+  /* Light semi‑transparent panel behind main content to improve legibility on busy backgrounds */
+  background-color: rgba(253, 248, 227, 0.6);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Layout for city and neighborhood buttons */
+.button-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+/* Ensure the map button takes the full row in a button list */
+/* Ensure the map button and favourites button take the full row in a button list */
+.button-list .map-button,
+.button-list .favorites-button {
+  flex-basis: 100%;
+}
+
+/* Ensure the hotels button also spans the full row in a button list */
+.button-list .hotels-button {
+  flex-basis: 100%;
+}
+
+/* Modern button styling: raised appearance with subtle gradient and shadow */
+.button {
+  background: linear-gradient(180deg, #e53935 0%, #c62828 100%);
+  color: #fff;
+  border: 1px solid #b71c1c;
+  padding: 1rem 1.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  display: inline-block;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.button:hover,
+.button:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  outline: none;
+}
+
+/* Styling for city name and dates within buttons */
+.button .city-name {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.button .city-dates {
+  display: block;
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin-top: 0.2rem;
+}
+
+/* Card styling for neighborhood details */
+.card {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 1.2rem;
+  /* Slightly off-white card background to complement Nihonga backgrounds */
+  background-color: rgba(255, 249, 239, 0.9);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.6rem;
+  color: #c62828;
+}
+
+.card p {
+  margin: 0.3rem 0;
+}
+
+.card ul {
+  margin: 0.5rem 0;
+  /* Remove default bullets; custom stars provide visual markers */
+  list-style: none;
+  padding-left: 0;
+}
+
+.card li {
+  margin-bottom: 0.3rem;
+}
+
+/* Back link */
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: #c62828;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.8rem;
+  color: #777;
+}
+
+/* When viewing a map, lighten the main panel overlay so the map image is more visible */
+body.map-view main {
+  background-color: rgba(253, 248, 227, 0.3);
+  /* Remove max-width limit in map view so the map fills the available horizontal space */
+  max-width: none;
+  width: 100%;
+}
+
+/* Station links styling */
+.station-link {
+  color: #1565c0;
+  text-decoration: underline;
+}
+
+.station-link:hover {
+  color: #0d47a1;
+  text-decoration: underline;
+}
+
+/* POI links styling (links to Google Maps). Use a similar style to station links */
+.poi-link {
+  color: #1565c0;
+  text-decoration: underline;
+}
+
+.poi-link:hover {
+  color: #0d47a1;
+  text-decoration: underline;
+}
+
+/* Star icons next to POIs */
+.star-icon {
+  cursor: pointer;
+  color: #c62828;
+  margin-right: 0.3rem;
+}
+
+.star-icon:hover {
+  color: #d32f2f;
+}
+
+/* Map view styles */
+.map-container {
+  position: relative;
+  width: 100%;
+  /* To maintain the map’s 3:2 portrait ratio, use a padding-bottom trick.
+     Set height to zero and bottom padding to 150% of width. This ensures the
+     container scales responsively while keeping aspect ratio. */
+  height: 0;
+  padding-bottom: 150%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  margin-top: 1rem;
+  overflow: hidden;
+}
+
+/* Distance scale placed underneath the map. Shows 1 mi, 5 mi and 10 mi bars */
+.distance-scale {
+  /* Align the scale to the right of the main content area */
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.scale-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Prevent the scale items from stretching */
+  flex: none;
+}
+
+.scale-bar {
+  height: 4px;
+  background-color: #c62828;
+  border-radius: 2px;
+  margin-bottom: 0.3rem;
+}
+
+.scale-item span {
+  font-size: 0.65rem;
+  color: #2c2c2c;
+  line-height: 1;
+}
+
+.pin {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Anchor the bottom of the marker at the specified coordinates */
+  transform: translate(-50%, -100%);
+  /* Enable pointer events for interactivity on map pins */
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.pin .dot {
+  width: 12px;
+  height: 12px;
+  background: #c62828;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+}
+
+.pin .label {
+  margin-top: 4px;
+  font-size: 0.7rem;
+  color: #2c2c2c;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 4px;
+  white-space: nowrap;
+}
