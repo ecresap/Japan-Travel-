@@ -94,6 +94,9 @@ const travelData = {
         'Uji': { x: 0.65, y: 0.8 },
         'Arashiyama': { x: 0.30, y: 0.45 },
         'Street Food': { x: 0.55, y: 0.5 }
+        ,
+        // Hotel pin: Prince Smart Inn Kyoto Sanjo is centrally located near the Sanjo area.
+        'Prince Smart Inn Kyoto Sanjo': { x: 0.52, y: 0.44 }
       }
     }
     ,
@@ -191,7 +194,8 @@ const travelData = {
     map: {
       image: 'assets/nihonga_osaka_map.png',
       pins: {
-        'Namba & Shinsaibashi': { x: 0.55, y: 0.58 },
+        // Adjusted positions to reduce overlap between central area pins.
+        'Namba & Shinsaibashi': { x: 0.55, y: 0.57 },
         'Den Den Town (Nipponbashi)': { x: 0.55, y: 0.65 },
         'Tennoji / Shinsekai': { x: 0.55, y: 0.72 },
         'Kita (Umeda)': { x: 0.55, y: 0.35 },
@@ -199,7 +203,11 @@ const travelData = {
         'Bay Area': { x: 0.30, y: 0.55 },
         'Expo Park (Suita)': { x: 0.60, y: 0.25 },
         'Minoo': { x: 0.50, y: 0.15 },
-        'Street Food': { x: 0.55, y: 0.6 }
+        // Adjust Street Food pin slightly to the right to separate it from Namba and the hotel.
+        'Street Food': { x: 0.57, y: 0.61 }
+        ,
+        // Hotel pin: Hotel Forza Osaka Namba Dotonbori sits in the Namba area near Dotonbori. Position adjusted to the left of the cluster.
+        'Hotel Forza Osaka Namba Dotonbori': { x: 0.53, y: 0.59 }
       }
     }
     ,
@@ -635,36 +643,22 @@ function showMap(cityKey) {
     lbl.textContent = label;
     pin.appendChild(lbl);
       // Make the pin clickable to jump to the neighborhood details
-      pin.addEventListener('click', (e) => {
+    pin.addEventListener('click', (e) => {
         e.stopPropagation();
-        showNeighborhood(cityKey, label);
+        // Determine whether the clicked label corresponds to a neighbourhood or a hotel.
+        const hotels = city.hotels || [];
+        const isHotel = hotels.some((h) => h.name === label);
+        if (isHotel) {
+          // If it is a hotel, navigate to the hotels view for the city.
+          showHotels(cityKey);
+        } else {
+          // Otherwise, assume it is a neighbourhood key and show its details.
+          showNeighborhood(cityKey, label);
+        }
       });
       mapContainer.appendChild(pin);
   });
   contentEl.appendChild(mapContainer);
-  // ----- Insert distance scale after the map -----
-  // Create a wrapper for the distance scale so it sits below the map and aligns to the right.
-  const scaleWrapper = document.createElement('div');
-  scaleWrapper.className = 'distance-scale';
-  // Define each scale item with a bar and label. Bar widths are set using inline styles for proportional lengths.
-  const scales = [
-    { miles: 1, width: 20 },
-    { miles: 5, width: 100 },
-    { miles: 10, width: 200 }
-  ];
-  scales.forEach((s) => {
-    const item = document.createElement('div');
-    item.className = 'scale-item';
-    const bar = document.createElement('div');
-    bar.className = 'scale-bar';
-    bar.style.width = s.width + 'px';
-    item.appendChild(bar);
-    const label = document.createElement('span');
-    label.textContent = s.miles + ' mi';
-    item.appendChild(label);
-    scaleWrapper.appendChild(item);
-  });
-  contentEl.appendChild(scaleWrapper);
   contentEl.focus();
   // Add map-view class so CSS can adjust panel styling for maps
   document.body.classList.add('map-view');
